@@ -1,282 +1,310 @@
-#include<iostream>
-#include<utility>
-#include<vector>
-#include<map>
 #include<bits/stdc++.h>
 using namespace std;
-void print(float tm[10][10],int m,int n){
-	for(int i=0;i<m;i++)
-	{
-		for(int j=0;j<n;j++){
-			cout<<tm[i][j]<<" ";
+
+void printMatrix(vector<vector<float>>&matrix){
+	for(int i=0;i<matrix.size();i++){
+		for(int j=0;j<matrix[i].size();j++){
+			cout<<matrix[i][j]<<" ";
 		}
 		cout<<endl;
 	}
 }
-bool isthere(vector<int> v,int key){
-	for(auto i:v){
-		if(i==key)
-		return true;
-	}
-	return false;
-}
-pair<int,int> findmin(float tm[10][10],int m,int n,vector<int> i_striked,vector<int> j_striked){
-	float min=INT_MAX;
-	pair<int,int> p;
-	for(int i=0;i<m;i++){
-		for(int j=0;j<n;j++){
-			if(tm[i][j]<min)
-			if(!isthere(i_striked,i) && !isthere(j_striked,j)){
-				p.first=i;p.second=j;
-				min=tm[i][j];
+
+void THP(vector<vector<float>>&matrix, vector<float>&supplies,vector<float>&demands){
+	int num_supplies = supplies.size(), num_demands = demands.size();
+	vector<vector<float>> allocation_matrix(num_supplies,vector<float>(num_demands,0));
+	vector<bool>is_row_eliminated(num_supplies,0);
+	vector<bool>is_col_elimintaed(num_demands,0);
+	//should perform till all rows and cols are eliminated
+	int not_terminated = num_supplies + num_demands;
+	int iterations = 1;
+	float total_cost = 0;
+	while(not_terminated){
+		cout<<"ITERATION - "<<iterations++<<endl<<endl;
+	//	Step 2. Determine the Penalty for each row and column
+		vector<float>row_penalities(num_supplies,-1);
+		vector<float>col_penalities(num_demands,-1);
+		vector<int>row_min_costs(num_supplies);
+		vector<int>col_min_costs(num_demands);
+		//row penalities
+		cout<<"Row penalities : ";
+		for(int i=0;i<num_supplies;i++){
+			//find Max Cost
+			if(!is_row_eliminated[i]){//calculate penality for rows that are not eliminated
+				float maxCost = INT_MIN;
+				float minCost = INT_MAX;
+				int count = 0;
+				for(int j=0;j<num_demands;j++){
+					//consider only those cells whose col is not eliminated
+					if(!is_col_elimintaed[j]){
+						maxCost = max(maxCost,matrix[i][j]);
+						if(minCost > matrix[i][j]){
+							minCost = matrix[i][j];
+							row_min_costs[i] = j;
+						}	
+						count++;
+					}
+				}
+				if(count>1){
+					row_penalities[i] = maxCost - minCost;
+					cout<<row_penalities[i]<<" ";	
+				}else{
+					cout<<"-- ";
+				}
+					
+			}else{
+				cout<<"NA ";
 			}
 		}
-	}
-	return p;
-}
-void least_cost(float tm[10][10],int m,int n,float supply_row[],float demand_col[],pair<pair<int,int>,float> solution[],int counts,vector<int> i_striked,vector<int> j_striked){
-	int count=counts;
-	while(count<(m+n)){
-		pair<int,int> p=findmin(tm,m,n,i_striked,j_striked);
-		int i=p.first,j=p.second;
-		solution[count].first.first=i;
-		solution[count].first.second=j;
-		if(supply_row[i]>=demand_col[j]){
-			supply_row[i]-=demand_col[j];
-			solution[count].second=demand_col[j];
-			demand_col[j]=0;
-			j_striked.push_back(j);
-		}else{
-			demand_col[j]-=supply_row[i];
-			solution[count].second=supply_row[i];
-			supply_row[i]=0;
-			i_striked.push_back(i);
-		}
-		count++;
-	}
-}
-float penality(float arr[],int n){
-	float min=INT_MAX;
-	int index=-1;
-	for(int i=0;i<n;i++){
-		if(min>arr[i]){
-			min=arr[i];
-			index=i;
-		}
-	}
-	float sec_min=INT_MAX;
-	for(int i=0;i<n;i++){
-		if(sec_min>arr[i] && i!=index){
-			sec_min=arr[i];
-		}
-	}
-	return sec_min-min;
-}
-int findmax(float arr[],int n){
-	float max=-1;int index=-1;
-	for(int i=0;i<n;i++){
-		if(max<arr[i]){
-			max=arr[i];
-			index=i;
-		}
-	}
-	return index;
-}
-int findmin(float arr[],int n){
-	float min=INT_MAX;
-	int index=-1;
-	for(int i=0;i<n;i++){
-		if(min>arr[i]){
-			min=arr[i];
-			index=i;
-		}
-	}
-	return index;
-}
-void cal_penalities(float tm[10][10],float row_penality[],float col_penality[],int m,int n,float supply_row[],float demand_col[]){
-	for(int i=0;i<m;i++){
-		if(supply_row[i]!=-1){
-			float arr[n];
-			for(int j=0;j<n;j++){
-				if(demand_col[j]==-1){
-					arr[j]=INT_MAX;
-				}else arr[j]=tm[i][j];
+		cout<<endl;
+		
+		//col penalities
+		cout<<"Column penalities : ";
+		for(int j=0;j<num_demands;j++){
+			//find Max Cost
+			if(!is_col_elimintaed[j]){//calculate penality for cols that are not eliminated
+				float maxCost = INT_MIN;
+				float minCost = INT_MAX;
+				int count = 0;
+				for(int i=0;i<num_supplies;i++){
+					//consider only those cells whose row is not eliminated
+					if(!is_row_eliminated[i]){
+						maxCost = max(maxCost,matrix[i][j]);
+						if(minCost > matrix[i][j]){
+							minCost = matrix[i][j];
+							col_min_costs[j] = i;
+						}	
+						count++;
+					}
+				}
+				if(count>1){
+					col_penalities[j] = maxCost - minCost;
+					cout<<col_penalities[j]<<" ";
+				}else{
+					cout<<"-- ";
+				}	
+			}else{
+				cout<<"NA ";
 			}
-			row_penality[i]=penality(arr,n);
+			
 		}
-		else row_penality[i]=-1;
-	}
-	for(int j=0;j<n;j++){
-		if(demand_col[j]!=-1){
-			float arr[m];
-			for(int i=0;i<m;i++){
-				if(supply_row[i]==-1){
-					arr[i]=INT_MAX;
-				}else arr[i]=tm[i][j];
-			}
-			col_penality[j]=penality(arr,m);
+		cout<<endl<<endl;
+		
+	//	Step 3. Select the Penalty and Cell
+		map<float,vector<pair<int,int>>>mp;
+		//mp[penality] = {is it a row/col penality,at what index};
+		for(int i=0;i<row_penalities.size();i++){
+			if(row_penalities[i] != -1)
+			mp[row_penalities[i]].push_back({0,i});
 		}
-		else col_penality[j]=-1;
-	}
-	
-}
-bool solve(float row_penality[],float col_penality[],int m,int n){
-	int count=0;
-	for(int i=0;i<m;i++){
-		if(row_penality[i]!=-1)count++;
-	}
-	if(count<2) 
-	return false;
-	count=0;
-	for(int i=0;i<n;i++){
-		if(col_penality[i]!=-1)count++;
-	}
-	if(count<2) 
-	return false;
-	return true;
-}
-void vam(float tm[10][10],int m,int n,pair<pair<int,int>,float> solution[],float supply_row[],float demand_col[]){
-	int count=0;
-	vector<int> i_striked,j_striked;
-	while(1){
-		float row_penality[m],col_penality[n];
-		cal_penalities(tm,row_penality,col_penality,m,n,supply_row,demand_col);
-		if(!solve(row_penality,col_penality,m,n)){
-			for(int i=0;i<m;i++){
-				if(row_penality[i]==-1){
-					i_striked.push_back(i);
+		for(int j=0;j<col_penalities.size();j++){
+			if(col_penalities[j] != -1)
+			mp[col_penalities[j]].push_back({1,j});
+		}
+		
+		if(mp.size() == 0){
+			//If only one element is left
+			int row = -1;
+			int col = -1;
+			for(int i=0;i<is_row_eliminated.size();i++){
+				if(!is_row_eliminated[i]){
+					row = i;
+					break;
 				}
 			}
-			for(int i=0;i<n;i++){
-				if(col_penality[i]==-1){
-					j_striked.push_back(i);
+			for(int j=0;j<is_col_elimintaed.size();j++){
+				if(!is_col_elimintaed[j]){
+					col = j;
+					break;
 				}
-			}	
+			}
+			if(row == -1 || col == -1){
+				cout<<"ERROR!!\n";
+			}else{
+				allocation_matrix[row][col] = min(supplies[row],demands[col]);
+				total_cost += matrix[row][col]*allocation_matrix[row][col];
+				cout<<"Allocated only left cell ("<<row + 1<<","<<col + 1<<") with "<< allocation_matrix[row][col] <<" units \n\n";
+				
+				cout<<"Allocation Matrix : \n";
+				printMatrix(allocation_matrix);
+				
+				supplies[row] -= allocation_matrix[row][col];
+				demands[col] -= allocation_matrix[row][col];
+				if(supplies[row] == 0){
+					is_row_eliminated[row] = 1;
+					not_terminated--;
+				}
+				if(demands[col] == 0){
+					is_col_elimintaed[col] = 1;
+					not_terminated--;
+				}
+			}
 			break;
 		}
-		int row_i=findmax(row_penality,n),col_j=findmax(col_penality,m);
-		int sol_i,sol_j;
-		if(row_penality[row_i]>col_penality[col_j]){
-			sol_i=row_i;
-			float arr[n];
-			for(int j=0;j<n;j++){
-				if(demand_col[j]!=-1)
-				arr[j]=tm[row_i][j];
-				else arr[j]=INT_MAX;
+		auto it = mp.rbegin();
+		
+		float highest_penality = it->first;
+		float next_highest_penality ;
+		vector<pair<int,int>> indices = it->second;
+		
+		pair<int,int> selected_cell = {-1,-1};
+		float selected_cell_CA = INT_MAX;
+		
+		cout<<"Highest Penality at : \n";
+		//to avoid code duplication when computing for HP and next HP
+		for(int i=0;i<2;i++){//iterating over choosen penalities
+			for(auto ele : indices){
+				int isCol = ele.first;
+				int index = ele.second;
+				float min_cost, allocation , CA;
+				int row,col;
+				if(!isCol){
+					cout<<"S"<<index + 1<<" -> ";
+					row = index;
+					col = row_min_costs[index];
+					min_cost = matrix[row][col];
+				}else{
+					cout<<"D"<<index + 1<<" -> ";
+					row = col_min_costs[index];
+					col = index;
+					min_cost = matrix[row][col];
+				}
+				allocation = min(supplies[row],demands[col]);
+				CA = min_cost * allocation;
+				//selecting cell
+				if(CA < selected_cell_CA){
+					selected_cell_CA = CA;
+					selected_cell = {row,col};
+				}else if(CA == selected_cell_CA){
+					if(min_cost < matrix[selected_cell.first][selected_cell.second]){
+						selected_cell_CA = CA;
+						selected_cell = {row,col};
+					}
+				}
+				cout<<"CA = "<<min_cost<<"*"<<allocation<<" = "<<CA<<" at cell ("<<row + 1<<","<<col + 1<<")\n";
 			}
-			sol_j=findmin(arr,n);
-		}else{
-			sol_j=col_j;
-			float arr[m];
-			for(int i=0;i<m;i++){
-				if(supply_row[i]!=-1)
-				arr[i]=tm[i][col_j];
-				else arr[i]=INT_MAX;
-			}
-			sol_i=findmin(arr,m);
+			
+			//moving to next highest penality
+			if(i == 0){
+				it++;
+				if(it == mp.rend()){
+					break;
+				}
+				next_highest_penality = it->first;
+				indices.clear();
+				indices = it->second;
+				cout<<"Next Highest Penality at : \n";
+			}	
 		}
-		solution[count].first.first=sol_i;
-		solution[count].first.second=sol_j;
-		if(supply_row[sol_i]>=demand_col[sol_j]){
-			supply_row[sol_i]-=demand_col[sol_j];
-			solution[count].second=demand_col[sol_j];
-			demand_col[sol_j]=-1;
-		}else{
-			demand_col[sol_j]-=supply_row[sol_i];
-			solution[count].second=supply_row[sol_i];
-			supply_row[sol_i]=-1;
-		}
-		count++;	
-	}
-	least_cost(tm,m,n,supply_row,demand_col,solution,count,i_striked,j_striked);
-}
-int main(){
-	int m,n;
-	cout<<"Enter the number of rows and columns :";
-	cin>>m>>n;
-	float tm[10][10],allocate[10][10];
-	cout<<"Enter the Cost matrix:"<<endl;
-	for(int i=0;i<m;i++)
-	for(int j=0;j<n;j++)
-	cin>>tm[i][j];
-	float supply_row[m+1],demand_col[n+1];
-	float supply=0,demand=0;
-	cout<<"Enter the Supply: ";
-	for(int i=0;i<m;i++){
-		cin>>supply_row[i];
-		supply+=supply_row[i];
-	}
-	cout<<"Enter the Demand: ";
-	for(int i=0;i<n;i++){
-		cin>>demand_col[i];
-		demand+=demand_col[i];
-	}
-	if(supply>demand){
-		for(int i=0;i<m;i++)
-		tm[i][n]=0;
-		demand_col[n]=supply-demand;
-		n++;
-	}
-	else if(demand>supply){
-		for(int j=0;j<n;j++)
-		tm[m][j]=0;
-		supply_row[m]=demand-supply;
-		m++;
-	}
-	pair<pair<int,int>,float> solution[m+n-1];
-	//northwest(m,n,supply_row,demand_col,solution);
-	/*for(int i=0;i<(m+n-1);i++){
-		cout<<solution[i].first.first<<" "<<solution[i].first.second<<" "<<solution[i].second<<endl;
-	}*/
-	/*least_cost(tm,m,n,supply_row,demand_col,solution);
-	for(int i=0;i<(m+n-1);i++)
-	cout<<solution[i].first.first<<" "<<solution[i].first.second<<" "<<solution[i].second<<endl;
-*/
-	vam(tm,m,n,solution,supply_row,demand_col);
-	float total_cost = 0;
-	//cout<<"Allocated cells - allocation :\n";
-	for(int i=0;i<(m+n-1);i++){
-		//cout<<solution[i].first.first<<" "<<solution[i].first.second<<" "<<solution[i].second<<endl;
-		allocate[solution[i].first.first][solution[i].first.second]=solution[i].second;
-		total_cost += tm[solution[i].first.first][solution[i].first.second]*solution[i].second;
-	}
-	cout<<"Allocation Matrix:"<<endl;
-	for(int i=0;i<m;i++){
-		for(int j=0;j<n;j++){
-			if(allocate[i][j]<0.0000001)
-			allocate[i][j]=0;
-			cout<<allocate[i][j]<<" ";
-		}
+		
+	//	Step 4. Allocate the Cell 
+		int selected_cell_row = selected_cell.first, selected_cell_col = selected_cell.second;
+		float allocation = selected_cell_CA/matrix[selected_cell_row][selected_cell_col];
+		cout<<"Selected Cell : ("<<selected_cell_row + 1<<","<<selected_cell_col + 1<<") with allocation of "<<allocation<<" units\n\n";
+		
+		//allocate cell
+		allocation_matrix[selected_cell_row][selected_cell_col] = allocation;
+		total_cost += matrix[selected_cell_row][selected_cell_col]*allocation;
+		
+		cout<<"Allocation Matrix : \n";
+		printMatrix(allocation_matrix);
 		cout<<endl;
+		
+		//update supplies and demands
+		supplies[selected_cell_row] -= allocation;
+		demands[selected_cell_col] -= allocation;
+		
+	//	Step 5. Eliminate Row or Column 
+		if(supplies[selected_cell_row] == 0){
+			is_row_eliminated[selected_cell_row] = 1;
+			not_terminated--;
+		}
+		if(demands[selected_cell_col] == 0){
+			is_col_elimintaed[selected_cell_col] = 1;
+			not_terminated--;
+		}	
 	}
-	cout<<"\nTotal Cost = "<<total_cost<<endl;
+	
+	cout<<"Total Cost = "<<total_cost<<endl;
+
+}
+
+int main(){
+	
+	vector<float> supplies;
+	vector<float> demands;
+	float input;
+	float total_supply = 0,total_demand = 0;
+	
+	//input supplies
+	cout<<"Enter the Supplies : ";
+	cin>>input;
+	while(input != -1){
+		supplies.push_back(input);
+		total_supply += input;
+		cin>>input;
+	}
+	
+	//input demands
+	cout<<"Enter the Demands : ";
+	cin>>input;
+	while(input != -1){
+		demands.push_back(input);
+		total_demand += input;
+		cin>>input;
+	}
+	
+	vector<vector<float>>matrix(supplies.size(),vector<float>(demands.size()));
+	//input cost matrix
+	cout<<"Enter cost matrix : \n";
+	for(int i=0;i<matrix.size();i++){
+		for(int j=0;j<matrix[i].size();j++){
+			cin>>matrix[i][j];
+		}
+	}
+	
+//	Step 1. Preliminaries
+	//check if given instance is balanced or not
+	cout<<"Total Supply : "<<total_supply<<endl;
+	cout<<"Total demand : "<<total_demand<<endl;
+	if(total_demand > total_supply){
+		supplies.push_back(total_demand - total_supply);
+		vector<float>dummy_row(demands.size(),0);
+		matrix.push_back(dummy_row);
+	}else if(total_supply > total_demand){
+		demands.push_back(total_supply - total_demand);
+		vector<float>dummy_col(supplies.size(),0);
+		for(int i=0;i<matrix.size();i++){
+			matrix[i].push_back(dummy_col[i]);
+		}
+	}else{
+		cout<<"Given instance is already balanced\n\n";
+	}
+	
+	//print the matrix
+	THP(matrix,supplies,demands);
 	
 }
+
 /*
-4
-4
+50 55 75 60 -1
+90 65 30 55 -1
 6 3 1 4
 7 6 2 1
 10 4 5 9
 7 7 7 3
-50 55 75 60
-90 65 30 55
 
-3
-3
+150 175 275 -1
+200 100 300 -1
 6 8 10
 7 11 11
 4 5 12
-150 175 275
-200 100 300
 
-5
-5
+18 17 19 13 15 -1
+16 18 20 14 14 -1
 70 37 6 76 17
 59 90 93 5 10
 93 62 77 47 62
 54 55 26 9 84
 53 20 84 15 9
-18 17 19 13 15
-16 18 20 14 14
 */
