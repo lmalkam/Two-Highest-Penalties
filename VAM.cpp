@@ -13,28 +13,6 @@ void print(float tm[10][10],int m,int n){
 		cout<<endl;
 	}
 }
-void northwest(int m,int n,float supply_row[],float demand_col[],pair<pair<int,int>,float> solution[]){
-	int count=0,i=0,j=0;
-	while(count<(m+n)){
-		if(supply_row[i]>=demand_col[j]){
-			supply_row[i]-=demand_col[j];
-			solution[count].first.first=i;
-			solution[count].first.second=j;
-			solution[count].second=demand_col[j];
-			demand_col[j]=0;
-			j++;
-			count++;
-		}else{
-			demand_col[j]-=supply_row[i];
-			solution[count].first.first=i;
-			solution[count].first.second=j;
-			solution[count].second=supply_row[i];
-			supply_row[i]=0;
-			i++;
-			count++;
-		}
-	}
-}
 bool isthere(vector<int> v,int key){
 	for(auto i:v){
 		if(i==key)
@@ -214,17 +192,21 @@ void vam(float tm[10][10],int m,int n,pair<pair<int,int>,float> solution[],float
 }
 int main(){
 	int m,n;
+	cout<<"Enter the number of rows and columns :";
 	cin>>m>>n;
-	float tm[10][10];
+	float tm[10][10],allocate[10][10];
+	cout<<"Enter the Cost matrix:"<<endl;
 	for(int i=0;i<m;i++)
 	for(int j=0;j<n;j++)
 	cin>>tm[i][j];
 	float supply_row[m+1],demand_col[n+1];
 	float supply=0,demand=0;
+	cout<<"Enter the Supply: ";
 	for(int i=0;i<m;i++){
 		cin>>supply_row[i];
 		supply+=supply_row[i];
 	}
+	cout<<"Enter the Demand: ";
 	for(int i=0;i<n;i++){
 		cin>>demand_col[i];
 		demand+=demand_col[i];
@@ -252,10 +234,20 @@ int main(){
 */
 	vam(tm,m,n,solution,supply_row,demand_col);
 	float total_cost = 0;
-	cout<<"Allocation cells - allocation :\n";
+	//cout<<"Allocated cells - allocation :\n";
 	for(int i=0;i<(m+n-1);i++){
-		cout<<solution[i].first.first<<" "<<solution[i].first.second<<" "<<solution[i].second<<endl;
+		//cout<<solution[i].first.first<<" "<<solution[i].first.second<<" "<<solution[i].second<<endl;
+		allocate[solution[i].first.first][solution[i].first.second]=solution[i].second;
 		total_cost += tm[solution[i].first.first][solution[i].first.second]*solution[i].second;
+	}
+	cout<<"Allocation Matrix:"<<endl;
+	for(int i=0;i<m;i++){
+		for(int j=0;j<n;j++){
+			if(allocate[i][j]<0.0000001)
+			allocate[i][j]=0;
+			cout<<allocate[i][j]<<" ";
+		}
+		cout<<endl;
 	}
 	cout<<"\nTotal Cost = "<<total_cost<<endl;
 	

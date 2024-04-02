@@ -34,7 +34,8 @@ void THP(vector<vector<float>>&matrix, vector<float>&supplies,vector<float>&dema
 				float maxCost = INT_MIN;
 				float minCost = INT_MAX;
 				int count = 0;
-				for(int j=0;j<num_demands;j++){ //consider only those cells whose col is not eliminated
+				for(int j=0;j<num_demands;j++){
+					//consider only those cells whose col is not eliminated
 					if(!is_col_elimintaed[j]){
 						maxCost = max(maxCost,matrix[i][j]);
 						if(minCost > matrix[i][j]){
